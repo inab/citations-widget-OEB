@@ -1,11 +1,11 @@
-import * as d3 from 'd3-format';
+import * as d3 from 'd3';
 import * as c3 from 'c3';
 import * as style from '../node_modules/c3/c3.css';
 
 
 async function fetchUrl(url) {
     try {
-        let request = await fetch(url);
+        let request = await fetch("https://openebench.bsc.es/monitor/metrics/"+url);
         let result = await request.text();
         return JSON.parse(result);
     }
@@ -13,37 +13,37 @@ async function fetchUrl(url) {
         console.log(`Error: ${err.stack}`);
     }
 }
-function genChartData(citations,chartName,title,dataH,fullName){
+function genChartData(citations,chartName,title,dataH,dataW,fullName){
     const columsData = [];
     const xsData = {};
-    
-    for(const i of citations){
-        for(const y of i.found_pubs){
-            const temp = {};
-            const max = new Date().getFullYear();
-            let min = y.year;
-            // console.log(Object.keys(y.citation_stats)[0]);
-            for(min; min<=max; min++){
-                temp[min]=0;
+    const maxYear = new Date().getFullYear();
+    const publicationsArray = citations.project.publications;
+    publicationsArray.forEach(publication => {
+        publication.entries.forEach(entry => {
+            let minYear = entry.year;
+            // console.log(entry);
+            let tmp = {};
+            for(minYear; minYear<=maxYear; minYear++){
+                tmp[minYear]=0;
             }
-            const title = y.title;
-            const pmid = y.pmid;
-            const citation_count = y.citation_count;
-            const citation_stats_temp = y.citation_stats;
-            const citation_stats = Object.assign(temp,citation_stats_temp);
-            const years = Object.keys(citation_stats);
-            const count = Object.values(citation_stats);
-            let key = 'PMID: '+pmid+' ('+citation_count+')';
+            let citation_tmp = {};
+            let key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
             if(fullName=="true"){
-                key = title+' PMID: '+pmid+' ('+citation_count+')';
+                key = entry.title+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
             };
+            entry.citations.forEach(citation => {
+                citation_tmp[citation.year]=citation.count;
+            })
+            const stats = Object.assign(tmp,citation_tmp);
+            const years = Object.keys(stats);
+            const count = Object.values(stats);
             count.unshift(key);
             years.unshift(key+'y');
             columsData.push(years,count);
             xsData[key]=key+'y';
-        }
-    }
-    populateChart(columsData,xsData,chartName,title,dataH);
+        })
+    });
+    populateChart(columsData,xsData,chartName,title,dataH,dataW);
 }
 
 
@@ -62,7 +62,44 @@ function genChartData(citations,chartName,title,dataH,fullName){
 //     };
 //     populateChart(columsData,chartName,xsData);
 // }
-function populateChart(columsData,xsData,chartName,title,dataH){
+
+
+// function genChartData(citations,chartName,title,dataH,dataW){
+
+// const columsData = [];
+// const xsData = {};
+
+// for(const i of citations){
+//     for(const y of i.found_pubs){
+//         const temp = {};
+//         const max = new Date().getFullYear();
+//         let min = y.year;
+//         // console.log(Object.keys(y.citation_stats)[0]);
+//         for(min; min<=max; min++){
+//             temp[min]=0;
+//         }
+//         const title = y.title;
+//         const pmid = y.pmid;
+//         const citation_count = y.citation_count;
+//         const citation_stats_temp = y.citation_stats;
+//         const citation_stats = Object.assign(temp,citation_stats_temp);
+//         const years = Object.keys(citation_stats);
+//         const count = Object.values(citation_stats);
+//         let key = 'PMID: '+pmid+' ('+citation_count+')';
+//         if(fullName=="true"){
+//             key = title+' PMID: '+pmid+' ('+citation_count+')';
+//         };
+//         count.unshift(key);
+//         years.unshift(key+'y');
+//         columsData.push(years,count);
+//         xsData[key]=key+'y';
+//     }
+// }
+//     populateChart(columsData,xsData,chartName,title,dataH);
+// }
+//Depricated
+
+function populateChart(columsData,xsData,chartName,title,dataH,dataW){
     const tickOptionsX = {
         
         format: d3.format('d'),
@@ -78,7 +115,8 @@ function populateChart(columsData,xsData,chartName,title,dataH){
     const chart = c3.generate({
         
         size: {
-            height: dataH?dataH:480,
+            height: dataH?dataH:'',
+            width: dataW?dataW:'',
         },
         title:{
             text: title,
@@ -95,7 +133,7 @@ function populateChart(columsData,xsData,chartName,title,dataH){
                     tick: tickOptionsY,
                     label: {
                         text: 'Citations',
-                        position: 'outer-center'
+                        position: 'outer-right'
                     },
                     min: 0,
                     padding: {
@@ -151,7 +189,7 @@ function populateChart(columsData,xsData,chartName,title,dataH){
     });
 }
 
-function loadUptimeChart (){
+function loadChart (){
     const x = document.getElementsByClassName("opebcitations");
     for(let y of x){
         try{
@@ -159,17 +197,22 @@ function loadUptimeChart (){
             const chartUrl = y.getAttribute('data-url');
             const title = y.getAttribute('data-title');
             const dataH = y.getAttribute('data-h');
+            const dataW = y.getAttribute('data-w');
             const fullName = y.getAttribute('data-full-name');
             const div = document.createElement("div");
             div.id = chartName;
             y.appendChild(div);
             const citations = fetchUrl(chartUrl);
             citations.then(function(result) {
-                genChartData(result.entry_pubs,chartName,title,dataH,fullName);
+                genChartData(result,chartName,title,dataH,dataW,fullName);
             });
         }catch(err){
             console.log(err);
         }
     }
 }
-loadUptimeChart();
+
+loadChart();
+export{
+    loadChart
+};

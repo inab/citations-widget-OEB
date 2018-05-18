@@ -9,10 +9,10 @@
   "author": "Vicky Sundesha <me.vicky@hotmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "c3": "^0.4.22",
+    "c3": "^0.6.1",
     "css-loader": "^0.28.11",
-    "d3": "^4.13.0",
-    "style-loader": "^0.20.3",
+    "d3": "^5.4.0",
+    "style-loader": "^0.21.0",
     "webpack": "^4.8.3",
     "webpack-cli": "^2.1.3"
   },
