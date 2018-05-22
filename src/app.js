@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import * as c3 from 'c3';
-import * as style from '../node_modules/c3/c3.css';
+import '../node_modules/c3/c3.css'
+
 
 
 async function fetchUrl(url) {
@@ -189,7 +190,7 @@ function populateChart(columsData,xsData,chartName,title,dataH,dataW){
     });
 }
 
-function loadChart (){
+function loadCitationChart (){
     const x = document.getElementsByClassName("opebcitations");
     for(let y of x){
         try{
@@ -212,7 +213,7 @@ function loadChart (){
     }
 }
 
-loadChart();
+loadCitationChart();
 export{
-    loadChart
+    loadCitationChart
 };
