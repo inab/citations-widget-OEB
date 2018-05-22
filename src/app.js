@@ -198,7 +198,7 @@ function loadChart (){
             const title = y.getAttribute('data-title');
             const dataH = y.getAttribute('data-h');
             const dataW = y.getAttribute('data-w');
-            const fullName = y.getAttribute('data-full-name');
+            const fullName = y.getAttribute('data-legend');
             const div = document.createElement("div");
             div.id = chartName;
             y.appendChild(div);
