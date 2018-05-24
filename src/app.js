@@ -14,7 +14,7 @@ async function fetchUrl(url) {
         console.log(`Error: ${err.stack}`);
     }
 }
-function genChartData(citations,chartName,title,dataH,dataW,fullName){
+function genChartData(citations,divid,title,dataH,dataW,fullName){
     const columsData = [];
     const xsData = {};
     const maxYear = new Date().getFullYear();
@@ -29,8 +29,11 @@ function genChartData(citations,chartName,title,dataH,dataW,fullName){
             }
             let citation_tmp = {};
             let key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
+            
             if(fullName=="true"){
                 key = entry.title+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
+                
+                
             };
             entry.citations.forEach(citation => {
                 citation_tmp[citation.year]=citation.count;
@@ -44,8 +47,164 @@ function genChartData(citations,chartName,title,dataH,dataW,fullName){
             xsData[key]=key+'y';
         })
     });
-    populateChart(columsData,xsData,chartName,title,dataH,dataW);
+    populateChart(columsData,xsData,divid,title,dataH,dataW);
 }
+
+
+
+
+function populateChart(columsData,xsData,divid,title,dataH,dataW){
+    const tickOptionsX = {
+        
+        format: d3.format('d'),
+        outer: false,
+    }
+    const tickOptionsY = {
+        
+        outer: false,
+        format: function(x) { return x % 1 === 0 ? x : ''; }
+        
+    }
+    
+    const chart = c3.generate({
+        
+        size: {
+            height: dataH?dataH:'',
+            width: dataW?dataW:'',
+        },
+        title:{
+            text: title,
+        },
+        data: {
+            xs:xsData,
+                columns: columsData,
+            },
+            legend: {
+                // position: 'bottom',
+                show: true,
+            },
+            axis: {
+                y:{
+                    tick: tickOptionsY,
+                    label: {
+                        text: 'Citations',
+                        position: 'outer-right'
+                    },
+                    min: 0,
+                    padding: {
+                        bottom: 5,
+                    },
+                },
+                x:{
+                    tick: tickOptionsX,
+                    label: {
+                        text: 'Year',
+                        position: 'outer-right'
+                    },
+                    padding: {
+                        right: 0.3,
+                    },
+                },
+            },
+            bindto: '#'+divid,
+            
+            tooltip: {
+                contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+
+                    let $$ = this, config = $$.config,
+                        titleFormat = config.tooltip_format_title || defaultTitleFormat,
+                        nameFormat = config.tooltip_format_name || function (name) { return name; },
+                        valueFormat = config.tooltip_format_value || defaultValueFormat,
+                        text, i, title, value, name, bgcolor, total=0;
+                    for (i = 0; i < d.length; i++) {
+                        total = total+d[i].value;
+                        if (! (d[i] && (d[i].value || d[i].value === 0))) { continue; }
+
+                        if (! text) {
+                            title = titleFormat ? titleFormat(d[i].x) : d[i].x;
+                            text = "<table class='" + $$.CLASS.tooltip + "'>" + (title || title === 0 ? "<tr><th colspan='2'>" + title + "</th></tr>" : "");
+                        }
+
+                        name = nameFormat(d[i].name);
+                        value = valueFormat(d[i].value, d[i].ratio, d[i].id, d[i].index);
+                        bgcolor = $$.levelColor ? $$.levelColor(d[i].value) : color(d[i].id);
+
+                        text += "<tr class='" + $$.CLASS.tooltipName + "-" + d[i].id + "'>";
+                        text += "<td class='name'><span style='background-color:" + bgcolor + "'></span>" + name + "</td>";
+                        text += "<td class='value'>" + value + "</td>";
+                        text += "</tr>";
+                    }
+                    text += "<tr class='" + $$.CLASS.tooltipName +"'>";
+                    text += "<td class='name'> Total </td>";
+                    text += "<td class='value'>" + total + "</td>";
+                    text += "</tr>";
+                    return text + "</table>";
+                },  
+            }
+    });
+
+    
+//     const legend = d3.select('.opebcitations').insert('div', '.class').attr('class', 'legend').selectAll('span').data(Object.keys(xsData));
+//     // const legendSvg = legend.enter().append('svg');
+//     const legendg = legend.enter().append('g');
+//     const legendText = legendg.append('text').attr('data-id', function (id) { return id; });
+//     const legendRect = legendg.append('rect').attr('data-id', function (id) { return id; });
+//     const legendLine = legendg.append('line').each(function (id) {d3.select(this).style('stroke', chart.color(id)).attr('width','20').attr('height','20').attr('stroke-width','10')});
+//     legendText.html(function (id) { return id; })
+//     // .each(function (id) {
+//     //     // d3.select(this).style('background-color', chart.color(id))
+//     //     // d3.select(this).append("a").attr('href','https://www.google.com').html(function () {return "link"})
+//     // })
+//     .on('mouseover', function (id) {
+//         chart.focus(id);
+//     })
+//     .on('mouseout', function (id) {
+//         chart.revert();
+//     })
+//     .on('click', function (id) {
+//         chart.toggle(id);
+//     })
+//     legendg.append("a").attr('href',function (id) {const pmidUrl = "https://www.ncbi.nlm.nih.gov/pubmed/"+id.split("PMID: ")[1].split(" ")[0]; return pmidUrl}).html("link").attr('target','_blank');
+    
+} 
+
+
+function loadCitationChart (){
+    const x = document.getElementsByClassName("opebcitations");
+    for(let y of x){
+        try{
+            const dataId = y.getAttribute('data-id');
+            const chartUrl = y.getAttribute('data-url');
+            const title = y.getAttribute('data-title');
+            const dataH = y.getAttribute('data-h');
+            const dataW = y.getAttribute('data-w');
+            const fullName = y.getAttribute('data-legend');
+            const div = document.createElement("div");
+            const divid = dataId+Math.floor(Math.random() * 9999);
+            div.id = divid
+            y.appendChild(div);
+            const citations = fetchUrl(chartUrl);
+            citations.then(function(result) {
+                genChartData(result,divid,title,dataH,dataW,fullName);
+            });
+        }catch(err){
+            console.log(err);
+        }
+    }
+}
+
+loadCitationChart();
+export{
+    loadCitationChart
+};
+
+
+
+
+
+
+
+
 
 
 //Depricated
@@ -99,121 +258,3 @@ function genChartData(citations,chartName,title,dataH,dataW,fullName){
 //     populateChart(columsData,xsData,chartName,title,dataH);
 // }
 //Depricated
-
-function populateChart(columsData,xsData,chartName,title,dataH,dataW){
-    const tickOptionsX = {
-        
-        format: d3.format('d'),
-        outer: false,
-    }
-    const tickOptionsY = {
-        
-        outer: false,
-        format: function(x) { return x % 1 === 0 ? x : ''; }
-        
-    }
-    
-    const chart = c3.generate({
-        
-        size: {
-            height: dataH?dataH:'',
-            width: dataW?dataW:'',
-        },
-        title:{
-            text: title,
-        },
-        data: {
-            xs:xsData,
-                columns: columsData,
-            },
-            legend: {
-                position: 'bottom',
-            },
-            axis: {
-                y:{
-                    tick: tickOptionsY,
-                    label: {
-                        text: 'Citations',
-                        position: 'outer-right'
-                    },
-                    min: 0,
-                    padding: {
-                        bottom: 5,
-                    },
-                },
-                x:{
-                    tick: tickOptionsX,
-                    label: {
-                        text: 'Year',
-                        position: 'outer-right'
-                    },
-                    padding: {
-                        right: 0.3,
-                    },
-                },
-            },
-            bindto: '#'+chartName,
-            
-            tooltip: {
-                contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
-
-                    let $$ = this, config = $$.config,
-                        titleFormat = config.tooltip_format_title || defaultTitleFormat,
-                        nameFormat = config.tooltip_format_name || function (name) { return name; },
-                        valueFormat = config.tooltip_format_value || defaultValueFormat,
-                        text, i, title, value, name, bgcolor, total=0;
-                    for (i = 0; i < d.length; i++) {
-                        total = total+d[i].value;
-                        if (! (d[i] && (d[i].value || d[i].value === 0))) { continue; }
-
-                        if (! text) {
-                            title = titleFormat ? titleFormat(d[i].x) : d[i].x;
-                            text = "<table class='" + $$.CLASS.tooltip + "'>" + (title || title === 0 ? "<tr><th colspan='2'>" + title + "</th></tr>" : "");
-                        }
-
-                        name = nameFormat(d[i].name);
-                        value = valueFormat(d[i].value, d[i].ratio, d[i].id, d[i].index);
-                        bgcolor = $$.levelColor ? $$.levelColor(d[i].value) : color(d[i].id);
-
-                        text += "<tr class='" + $$.CLASS.tooltipName + "-" + d[i].id + "'>";
-                        text += "<td class='name'><span style='background-color:" + bgcolor + "'></span>" + name + "</td>";
-                        text += "<td class='value'>" + value + "</td>";
-                        text += "</tr>";
-                    }
-                    text += "<tr class='" + $$.CLASS.tooltipName +"'>";
-                    text += "<td class='name'> Total </td>";
-                    text += "<td class='value'>" + total + "</td>";
-                    text += "</tr>";
-                    return text + "</table>";
-                },  
-            }
-    });
-}
-
-function loadCitationChart (){
-    const x = document.getElementsByClassName("opebcitations");
-    for(let y of x){
-        try{
-            const chartName = y.getAttribute('data-id');
-            const chartUrl = y.getAttribute('data-url');
-            const title = y.getAttribute('data-title');
-            const dataH = y.getAttribute('data-h');
-            const dataW = y.getAttribute('data-w');
-            const fullName = y.getAttribute('data-legend');
-            const div = document.createElement("div");
-            div.id = chartName;
-            y.appendChild(div);
-            const citations = fetchUrl(chartUrl);
-            citations.then(function(result) {
-                genChartData(result,chartName,title,dataH,dataW,fullName);
-            });
-        }catch(err){
-            console.log(err);
-        }
-    }
-}
-
-loadCitationChart();
-export{
-    loadCitationChart
-};
