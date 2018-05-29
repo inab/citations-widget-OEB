@@ -6,12 +6,19 @@ import '../node_modules/c3/c3.css'
 
 async function fetchUrl(url) {
     try {
+        // let request = new Promise((resolve, reject) => {
         let request = await fetch("https://openebench.bsc.es/monitor/metrics/"+url);
+        // }) 
+        
+            
         let result = await request.text();
+        
         return JSON.parse(result);
+        // alert(result);
+        
     }
     catch (err) {
-        console.log(`Error: ${err.stack}`);
+        // console.log(`Error:`+err);
     }
 }
 function genChartData(citations,divid,title,dataH,dataW,fullName){
@@ -143,36 +150,35 @@ function populateChart(columsData,xsData,divid,title,dataH,dataW){
             }
     });
 
-    
-//     const legend = d3.select('.opebcitations').insert('div', '.class').attr('class', 'legend').selectAll('span').data(Object.keys(xsData));
-//     // const legendSvg = legend.enter().append('svg');
-//     const legendg = legend.enter().append('g');
-//     const legendText = legendg.append('text').attr('data-id', function (id) { return id; });
-//     const legendRect = legendg.append('rect').attr('data-id', function (id) { return id; });
-//     const legendLine = legendg.append('line').each(function (id) {d3.select(this).style('stroke', chart.color(id)).attr('width','20').attr('height','20').attr('stroke-width','10')});
-//     legendText.html(function (id) { return id; })
-//     // .each(function (id) {
-//     //     // d3.select(this).style('background-color', chart.color(id))
-//     //     // d3.select(this).append("a").attr('href','https://www.google.com').html(function () {return "link"})
-//     // })
-//     .on('mouseover', function (id) {
-//         chart.focus(id);
-//     })
-//     .on('mouseout', function (id) {
-//         chart.revert();
-//     })
-//     .on('click', function (id) {
-//         chart.toggle(id);
-//     })
-//     legendg.append("a").attr('href',function (id) {const pmidUrl = "https://www.ncbi.nlm.nih.gov/pubmed/"+id.split("PMID: ")[1].split(" ")[0]; return pmidUrl}).html("link").attr('target','_blank');
+    // const legend = d3.select('.opebcitations').insert('div', '.class').attr('class', 'legend').selectAll('span').data(Object.keys(xsData));
+    // // const legendSvg = legend.enter().append('svg');
+    // const legendg = legend.enter().append('g')
+    // .each(function (id) {
+    //     d3.select(this).append("rect").attr('width','10').attr('height','10').style('border-left',chart.color(id))
+    // })
+    // const legendText = legendg.append('text').attr('data-id', function (id) { return id; }).style("margin","2px");
+    // legendText.html(function (id) { return id; })
+    // .on('mouseover', function (id) {
+    //     chart.focus(id);
+    // })
+    // .on('mouseout', function (id) {
+    //     chart.revert();
+    // })
+    // .on('click', function (id) {
+    //     chart.toggle(id);
+    // })
+    // legendg.append("a").attr('href',function (id) {const pmidUrl = "https://www.ncbi.nlm.nih.gov/pubmed/"+id.split("PMID: ")[1].split(" ")[0]; return pmidUrl}).html("link").attr('target','_blank');
     
 } 
 
 
 function loadCitationChart (){
     const x = document.getElementsByClassName("opebcitations");
-    for(let y of x){
+    
+    let i = 0;
+    for(const y of x){
         try{
+            i++;
             const dataId = y.getAttribute('data-id');
             const chartUrl = y.getAttribute('data-url');
             const title = y.getAttribute('data-title');
@@ -180,13 +186,19 @@ function loadCitationChart (){
             const dataW = y.getAttribute('data-w');
             const fullName = y.getAttribute('data-legend');
             const div = document.createElement("div");
-            const divid = dataId+Math.floor(Math.random() * 9999);
+            // console.log(i,y)
+            const divid = dataId+i;
             div.id = divid
             y.appendChild(div);
             const citations = fetchUrl(chartUrl);
             citations.then(function(result) {
-                genChartData(result,divid,title,dataH,dataW,fullName);
-            });
+                try{
+                    genChartData(result,divid,title,dataH,dataW,fullName);
+                }
+                catch (err) {
+                    console.log("Error: incorrect data-url "+chartUrl);
+                }
+            });            
         }catch(err){
             console.log(err);
         }
