@@ -28,12 +28,14 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
     const publicationsArray = citations.project.publications;
     publicationsArray.forEach(publication => {
         publication.entries.forEach(entry => {
+            // console.log(entry.year);
             let minYear = entry.year;
-            // console.log(entry);
+            let tmpminYear = minYear;
             let tmp = {};
             for(minYear; minYear<=maxYear; minYear++){
                 tmp[minYear]=0;
             }
+            // console.log(tmp)
             let citation_tmp = {};
             let key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
             
@@ -42,9 +44,17 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
                 
                 
             };
+
             entry.citations.forEach(citation => {
-                citation_tmp[citation.year]=citation.count;
+                if(citation.year>=tmpminYear-1){
+                    citation_tmp[citation.year]=citation.count;
+                }
             })
+            // console.log(citation_tmp)
+
+            // const stats = Object.keys(tmp).map(function(v, k){
+            //     console.log(v , k);
+            // })
             const stats = Object.assign(tmp,citation_tmp);
             const years = Object.keys(stats);
             const count = Object.values(stats);
@@ -52,6 +62,7 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
             years.unshift(key+'y');
             columsData.push(years,count);
             xsData[key]=key+'y';
+          
         })
     });
     populateChart(columsData,xsData,divid,title,dataH,dataW);
