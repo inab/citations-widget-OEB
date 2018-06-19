@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import * as c3 from 'c3';
 import '../node_modules/c3/c3.css'
+import './app.css';
 
 
 
@@ -37,13 +38,20 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
             }
             // console.log(tmp)
             let citation_tmp = {};
-            let key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
-            
-            if(fullName=="true"){
-                key = entry.title+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
+            let key = "";
+            if(entry.pmid){
+                key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
                 
+                if(fullName=="true"){
+                    key = entry.title?entry.title:'N/A'+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
+                };
+            } else {
+                key = 'Doi: '+entry.doi+' ('+entry.cit_count+')';
                 
-            };
+                if(fullName=="true"){
+                    key = entry.title?entry.title:'N/A'+' Doi: '+entry.doi+' ('+entry.cit_count+')';
+                };
+            }
 
             entry.citations.forEach(citation => {
                 if(citation.year>=tmpminYear-1){
@@ -124,6 +132,9 @@ function populateChart(columsData,xsData,divid,title,dataH,dataW){
                     },
                 },
             },
+            point : {
+                show:true
+            },
             bindto: '#'+divid,
             
             tooltip: {
@@ -183,6 +194,14 @@ function populateChart(columsData,xsData,divid,title,dataH,dataW){
 } 
 
 
+function generateMessage(id,y,msg){
+    const p = document.createElement("p");
+    p.setAttribute("class","citationChartErrorMessage")
+    p.innerHTML = msg;
+    y.appendChild(p);
+
+}
+
 function loadCitationChart (){
     const x = document.getElementsByClassName("opebcitations");
     
@@ -190,6 +209,7 @@ function loadCitationChart (){
     for(const y of x){
         try{
             i++;
+            let msg = "";
             const dataId = y.getAttribute('data-id');
             const chartUrl = y.getAttribute('data-url');
             const title = y.getAttribute('data-title');
@@ -204,10 +224,18 @@ function loadCitationChart (){
             const citations = fetchUrl(chartUrl);
             citations.then(function(result) {
                 try{
-                    genChartData(result,divid,title,dataH,dataW,fullName);
+                    if(result.project.publications==0){
+                        msg = "No publications found";
+                        generateMessage(divid,y,msg);
+                    } else {
+                        genChartData(result,divid,title,dataH,dataW,fullName);
+                    }
+                    
                 }
                 catch (err) {
                     console.log("Error: incorrect data-url "+chartUrl);
+                    msg = "Incorrect url"
+                    generateMessage(divid,y,msg)
                 }
             });            
         }catch(err){
