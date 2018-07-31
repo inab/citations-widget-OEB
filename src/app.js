@@ -39,20 +39,23 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
             // console.log(tmp)
             let citation_tmp = {};
             let key = "";
+            
             if(entry.pmid){
+                
                 key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
                 
                 if(fullName=="true"){
-                    key = entry.title?entry.title:'N/A'+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
+                    key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
                 };
             } else {
+                
                 key = 'Doi: '+entry.doi+' ('+entry.cit_count+')';
                 
                 if(fullName=="true"){
-                    key = entry.title?entry.title:'N/A'+' Doi: '+entry.doi+' ('+entry.cit_count+')';
+                    key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' Doi: '+entry.doi+' ('+entry.cit_count+')';
                 };
             }
-
+            
             entry.citations.forEach(citation => {
                 if(citation.year>=tmpminYear-1){
                     citation_tmp[citation.year]=citation.count;
@@ -196,11 +199,13 @@ function populateChart(columsData,xsData,divid,title,dataH,dataW){
 
 function generateMessage(id,y,msg){
     const p = document.createElement("p");
+    p.id = "errorMessage"
     p.setAttribute("class","citationChartErrorMessage")
-    p.innerHTML = msg;
+    p.text = msg;
     y.appendChild(p);
 
 }
+
 
 function loadCitationChart (){
     const x = document.getElementsByClassName("opebcitations");
@@ -233,7 +238,7 @@ function loadCitationChart (){
                     
                 }
                 catch (err) {
-                    console.log("Error: incorrect data-url "+chartUrl);
+                    // console.log("Error: incorrect data-url "+chartUrl);
                     msg = "Incorrect url"
                     generateMessage(divid,y,msg)
                 }
