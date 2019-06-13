@@ -5,10 +5,19 @@ import './app.css';
 
 
 
-async function fetchUrl(url) {
+async function fetchUrl(url, mode) {
     try {
+
+        let base_url;
+            if(mode != null){
+                base_url = "dev-openebench"
+            } else {
+                base_url = "openebench"
+            }
+
         // let request = new Promise((resolve, reject) => {
-        let request = await fetch("https://openebench.bsc.es/monitor/metrics/"+url);
+            console.log("https://"+base_url+".bsc.es/monitor/metrics/"+url)
+        let request = await fetch("https://"+base_url+".bsc.es/monitor/metrics/"+url);
         // }) 
         
             
@@ -29,51 +38,51 @@ function genChartData(citations,divid,title,dataH,dataW,fullName){
     const publicationsArray = citations.project.publications;
     publicationsArray.forEach(publication => {
         publication.entries.forEach(entry => {
-            // console.log(entry.year);
             let minYear = entry.year;
-            let tmpminYear = minYear;
-            let tmp = {};
-            for(minYear; minYear<=maxYear; minYear++){
-                tmp[minYear]=0;
-            }
-            // console.log(tmp)
-            let citation_tmp = {};
-            let key = "";
-            
-            if(entry.pmid){
-                
-                key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
-                
-                if(fullName=="true"){
-                    key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
-                };
-            } else {
-                
-                key = 'Doi: '+entry.doi+' ('+entry.cit_count+')';
-                
-                if(fullName=="true"){
-                    key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' Doi: '+entry.doi+' ('+entry.cit_count+')';
-                };
-            }
-            
-            entry.citations.forEach(citation => {
-                if(citation.year>=tmpminYear-1){
-                    citation_tmp[citation.year]=citation.count;
+            if(minYear != null){
+                let tmpminYear = minYear;
+                let tmp = {};
+                for(minYear; minYear<=maxYear; minYear++){
+                    tmp[minYear]=0;
                 }
-            })
-            // console.log(citation_tmp)
+                // console.log(tmp)
+                let citation_tmp = {};
+                let key = "";
+                
+                if(entry.pmid){
+                    
+                    key = 'PMID: '+entry.pmid+' ('+entry.cit_count+')';
+                    
+                    if(fullName=="true"){
+                        key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' PMID: '+entry.pmid+' ('+entry.cit_count+')';
+                    };
+                } else {
+                    
+                    key = 'Doi: '+entry.doi+' ('+entry.cit_count+')';
+                    
+                    if(fullName=="true"){
+                        key = entry.title?entry.title+' ('+entry.cit_count+')':'N/A'+' Doi: '+entry.doi+' ('+entry.cit_count+')';
+                    };
+                }
+                
+                entry.citations.forEach(citation => {
+                    if(citation.year>=tmpminYear-1){
+                        citation_tmp[citation.year]=citation.count;
+                    }
+                })
+                // console.log(citation_tmp)
 
-            // const stats = Object.keys(tmp).map(function(v, k){
-            //     console.log(v , k);
-            // })
-            const stats = Object.assign(tmp,citation_tmp);
-            const years = Object.keys(stats);
-            const count = Object.values(stats);
-            count.unshift(key);
-            years.unshift(key+'y');
-            columsData.push(years,count);
-            xsData[key]=key+'y';
-          
+                // const stats = Object.keys(tmp).map(function(v, k){
+                //     console.log(v , k);
+                // })
+                const stats = Object.assign(tmp,citation_tmp);
+                const years = Object.keys(stats);
+                const count = Object.values(stats);
+                count.unshift(key);
+                years.unshift(key+'y');
+                columsData.push(years,count);
+                xsData[key]=key+'y';
+            }  
         })
     });
     populateChart(columsData,xsData,divid,title,dataH,dataW);
@@ -221,12 +230,14 @@ function loadCitationChart (){
             const dataH = y.getAttribute('data-h');
             const dataW = y.getAttribute('data-w');
             const fullName = y.getAttribute('data-legend');
+            const mode = y.getAttribute('dev');
             const div = document.createElement("div");
+            
             // console.log(i,y)
             const divid = dataId+i;
             div.id = divid
             y.appendChild(div);
-            const citations = fetchUrl(chartUrl);
+            const citations = fetchUrl(chartUrl,mode);
             citations.then(function(result) {
                 try{
                     if(result.project.publications==0){
