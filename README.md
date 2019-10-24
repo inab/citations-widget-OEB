@@ -4,7 +4,7 @@ This is a standalone widget to display the citations of a tool at OpenEBench.
 
 ![Alt text](docs/images/screenshot.png 'Screenshot')
 
-Live demo available at : https://vsundesha.github.io/citations-widget/
+Live demo available at : https://vsundesha.github.io/citations-widget-OEB/
 
 # How to
 
