@@ -8,7 +8,6 @@
     "prod": "./node_modules/.bin/webpack-cli src/app.js --output=build/build.js -p;",
     "dev": "./node_modules/.bin/webpack-cli src/app.js --output=build/build.js -d -w;",
     "test": "echo \"Error: no test specified\" && exit 1"
-
   },
   "author": "Vicky Sundesha <me.vicky@hotmail.com>",
   "license": "ISC",
